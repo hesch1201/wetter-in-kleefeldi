@@ -1,0 +1,583 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hannover — Wetter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#8A2E5E;
+    --muted:#B9789C;
+    --bg:#FFF3F8;
+    --wash:#FFE6F1;
+    --accent:#FF6FA5;
+    --accent2:#C48CE0;
+    --line: rgba(138,46,94,0.14);
+  }
+
+  *{ box-sizing:border-box; }
+
+  html,body{
+    margin:0;
+    min-height:100%;
+  }
+
+  body{
+    background: radial-gradient(130% 150% at 50% -10%, var(--wash) 0%, var(--bg) 55%);
+    color: var(--ink);
+    font-family: 'Quicksand', system-ui, sans-serif;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:100vh;
+    padding: 32px 20px;
+    overflow-x: hidden;
+    transition: background 0.6s ease;
+  }
+
+  main{
+    width:100%;
+    max-width: 380px;
+    text-align:center;
+  }
+
+  .place{
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--muted);
+    letter-spacing: 0.01em;
+    margin: 0 0 22px;
+  }
+
+  .place strong{
+    color: var(--ink);
+    font-weight: 700;
+  }
+
+  .icon{
+    width: 60px;
+    height: 60px;
+    margin: 4px auto 10px;
+    color: var(--accent);
+  }
+
+  .icon svg{ width:100%; height:100%; display:block; overflow: visible; }
+
+  .temp{
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 600;
+    font-size: clamp(64px, 19vw, 96px);
+    line-height: 1.25;
+    margin: 4px 0 2px;
+    padding: 6px 0 0;
+    letter-spacing: -0.01em;
+    background: linear-gradient(135deg, var(--ink) 0%, var(--accent) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .temp sup{
+    font-size: 0.35em;
+    font-weight: 500;
+    top: -0.5em;
+    position: relative;
+    margin-left: 2px;
+  }
+
+  .condition{
+    font-size: 19px;
+    font-weight: 500;
+    color: var(--muted);
+    margin: 0 0 24px;
+  }
+
+  .stats{
+    display:flex;
+    justify-content:center;
+    gap: 14px;
+    padding: 14px 0;
+    border-top: 2px dotted var(--line);
+  }
+
+  .stats.last{
+    border-bottom: 2px dotted var(--line);
+  }
+
+  .stat{ text-align:center; flex:1; min-width:0; }
+
+  .stat .val{
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+
+  .stat .lbl{
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .sunline{
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--muted);
+    margin: 14px 0 24px;
+  }
+
+  .chart-title, .timeline-title{
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    margin: 0 0 12px;
+    text-align: left;
+  }
+
+  .chart-wrap{
+    margin-bottom: 24px;
+    padding-bottom: 22px;
+    border-bottom: 2px dotted var(--line);
+  }
+
+  .timeline{
+    display:grid;
+    grid-template-columns: repeat(3, 1fr);
+    row-gap: 20px;
+    padding-bottom: 22px;
+    margin-bottom: 24px;
+    border-bottom: 2px dotted var(--line);
+  }
+
+  .tpoint{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:6px;
+  }
+
+  .tpoint .ticon{
+    width: 24px;
+    height: 24px;
+    color: var(--accent2);
+  }
+
+  .tpoint .ticon svg{ width:100%; height:100%; display:block; overflow: visible; }
+
+  .tpoint .tval{
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .tpoint .tlbl{
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--muted);
+  }
+
+  .advice{
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 500;
+    font-size: 19px;
+    line-height: 1.45;
+    max-width: 30ch;
+    margin: 0 auto 18px;
+    color: var(--ink);
+  }
+
+  .speak{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    background: linear-gradient(135deg, #FFDCEC 0%, #FBEFFF 100%);
+    border: 1.5px solid var(--accent);
+    border-radius: 999px;
+    padding: 10px 20px;
+    font-family: 'Quicksand', system-ui, sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink);
+    cursor:pointer;
+    margin-bottom: 22px;
+    transition: background 0.2s ease, transform 0.15s ease;
+  }
+
+  .speak:hover{ transform: scale(1.03); }
+
+  .speak:focus-visible{
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .speak svg{ width:16px; height:16px; display:block; }
+
+  .speak[aria-pressed="true"]{
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+    color: #fff;
+  }
+
+  .updated{
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+  }
+
+  .error{
+    font-size: 15px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    body{ transition:none; }
+  }
+</style>
+</head>
+<body>
+  <main id="app">
+    <p class="place" id="greetLine">Hallo in <strong>Hannover</strong> \u2728</p>
+    <p class="error" id="loading">Wir schauen kurz in den Himmel …</p>
+  </main>
+
+<script>
+(function(){
+  var LAT = 52.376300, LON = 9.795063;
+  var PLACE = 'Hannover';
+  var INK = '#8A2E5E';
+  var ACCENT = '#FF6FA5';
+
+  var ICONS = {
+    sun: '<svg viewBox="-6 -6 76 76" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="32" cy="32" r="12"/><path d="M32 6v8M32 50v8M6 32h8M50 32h8M14 14l5.5 5.5M44.5 44.5L50 50M50 14l-5.5 5.5M19.5 44.5L14 50"/></svg>',
+    cloudSun: '<svg viewBox="-6 -6 76 76" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="22" cy="20" r="8"/><path d="M22 4v4M8 20h4M34 12l-2.8 2.8M9.2 32.8L12 30"/><path d="M42 50H20a10 10 0 0 1-1.2-19.9A13 13 0 0 1 44 26a9 9 0 0 1-2 24Z"/></svg>',
+    cloud: '<svg viewBox="-6 -6 76 76" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M46 48H20a11 11 0 1 1 2-21.8A14.5 14.5 0 0 1 50 30a10 10 0 0 1-4 18Z"/></svg>',
+    fog: '<svg viewBox="-6 -6 76 76" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M14 24h30M10 34h44M14 44h30M28 54h20"/></svg>',
+    rain: '<svg viewBox="-6 -6 76 76" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M44 34H20a11 11 0 1 1 2-21.8A14.5 14.5 0 0 1 48 16a10 10 0 0 1-4 18Z"/><path d="M22 46l-3 8M32 46l-3 8M42 46l-3 8"/></svg>',
+    snow: '<svg viewBox="-6 -6 76 76" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M44 32H20a11 11 0 1 1 2-21.8A14.5 14.5 0 0 1 48 14a10 10 0 0 1-4 18Z"/><path d="M22 46v10M17 51l10-10M27 51l-10-10M42 46v10M37 51l10-10M47 51l-10-10"/></svg>',
+    storm: '<svg viewBox="-6 -6 76 76" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M42 30H20a11 11 0 1 1 2-21.8A14.5 14.5 0 0 1 46 12a10 10 0 0 1-4 18Z"/><path d="M33 38l-8 12h7l-4 10 11-14h-7l4-8Z" stroke-linejoin="round"/></svg>'
+  };
+
+  var SPEAKER_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9H4Z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>';
+  var STOP_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="1.5"/></svg>';
+
+  var WMO = {
+    0:  {label:'Klarer Himmel',        icon:'sun',      mood:'clear'},
+    1:  {label:'Überwiegend klar',     icon:'cloudSun', mood:'clear'},
+    2:  {label:'Teilweise bewölkt',    icon:'cloudSun', mood:'cloudy'},
+    3:  {label:'Bedeckt',              icon:'cloud',    mood:'cloudy'},
+    45: {label:'Neblig',               icon:'fog',      mood:'fog'},
+    48: {label:'Reifnebel',            icon:'fog',      mood:'fog'},
+    51: {label:'Leichter Nieselregen', icon:'rain',     mood:'rain'},
+    53: {label:'Nieselregen',          icon:'rain',     mood:'rain'},
+    55: {label:'Starker Nieselregen',  icon:'rain',     mood:'rain'},
+    56: {label:'Gefrierender Niesel',  icon:'rain',     mood:'rain'},
+    57: {label:'Gefrierender Niesel',  icon:'rain',     mood:'rain'},
+    61: {label:'Leichter Regen',       icon:'rain',     mood:'rain'},
+    63: {label:'Regen',                icon:'rain',     mood:'rain'},
+    65: {label:'Starker Regen',        icon:'rain',     mood:'rain'},
+    66: {label:'Gefrierender Regen',   icon:'rain',     mood:'rain'},
+    67: {label:'Gefrierender Regen',   icon:'rain',     mood:'rain'},
+    71: {label:'Leichter Schneefall',  icon:'snow',     mood:'snow'},
+    73: {label:'Schneefall',           icon:'snow',     mood:'snow'},
+    75: {label:'Starker Schneefall',   icon:'snow',     mood:'snow'},
+    77: {label:'Schneegriesel',        icon:'snow',     mood:'snow'},
+    80: {label:'Regenschauer',         icon:'rain',     mood:'rain'},
+    81: {label:'Regenschauer',         icon:'rain',     mood:'rain'},
+    82: {label:'Heftige Schauer',      icon:'rain',     mood:'rain'},
+    85: {label:'Schneeschauer',        icon:'snow',     mood:'snow'},
+    86: {label:'Schneeschauer',        icon:'snow',     mood:'snow'},
+    95: {label:'Gewitter',             icon:'storm',    mood:'storm'},
+    96: {label:'Gewitter mit Hagel',   icon:'storm',    mood:'storm'},
+    99: {label:'Gewitter mit Hagel',   icon:'storm',    mood:'storm'}
+  };
+
+  // Pastellige Rosa-/Flieder-Töne statt der neutralen Nordstadt-Palette.
+  var WASH = {
+    clear:  '#FFE9CF',
+    cloudy: '#F3E2EE',
+    fog:    '#F0E2ED',
+    rain:   '#E9DFF2',
+    snow:   '#FDEFF8',
+    storm:  '#E7D8EA'
+  };
+
+  var GREETINGS = {
+    morning: ['Guten Morgen', 'Morgen', 'Hey', 'Hi'],
+    day:     ['Guten Tag', 'Hi', 'Hallo', 'Hey'],
+    evening: ['Guten Abend', 'Hey', 'Hallo'],
+    night:   ['Gute Nacht', 'Hey, noch spät unterwegs?']
+  };
+
+  function weatherInfo(code){
+    return WMO[code] || {label:'Wechselhaft', icon:'cloud', mood:'cloudy'};
+  }
+
+  // Alle Zeitwerte kommen als lokale ISO-Strings (Europe/Berlin) von der API,
+  // z.B. "2026-09-05T14:00". Wir schneiden Stunde/Minute direkt aus dem
+  // String statt über Date() zu gehen, damit die Gerätezeitzone keine Rolle spielt.
+  function isoHour(iso){ return parseInt(iso.slice(11,13), 10); }
+  function isoHM(iso){ return iso.slice(11,16); }
+  function hourLabel(iso){ return isoHour(iso) + ' Uhr'; }
+
+  function periodFor(hour){
+    if (hour >= 5 && hour < 11) return 'morning';
+    if (hour >= 11 && hour < 18) return 'day';
+    if (hour >= 18 && hour < 22) return 'evening';
+    return 'night';
+  }
+
+  function pickGreeting(hour){
+    var list = GREETINGS[periodFor(hour)];
+    return list[Math.floor(Math.random() * list.length)];
+  }
+
+  function uvLabel(v){
+    if (v < 3) return 'niedrig';
+    if (v < 6) return 'mäßig';
+    if (v < 8) return 'hoch';
+    if (v < 11) return 'sehr hoch';
+    return 'extrem';
+  }
+
+  function deNum(n){ return n.toFixed(1).replace('.', ','); }
+
+  function buildAdvice(mood, windKmh, feelsLike){
+    var lines = [];
+    if (mood === 'rain' || mood === 'storm'){
+      lines.push('Nimm einen Regenschirm mit \u2614');
+    } else if (mood === 'snow'){
+      lines.push('Vorsicht, es kann glatt sein \u2744');
+    } else if (feelsLike <= 3){
+      lines.push('Zieh dich warm an, es ist frisch \u2744');
+    } else if (feelsLike >= 22 && mood === 'clear'){
+      lines.push('Warm und sonnig — leicht anziehen \u2600');
+    } else if (mood === 'clear'){
+      lines.push('Sieht nach einem schönen Tag aus \u2728');
+    } else if (mood === 'fog'){
+      lines.push('Neblig — fahr vorsichtig los \u{1F32B}');
+    } else {
+      lines.push('Ein ruhiger, gemütlicher Tag \u{1F338}');
+    }
+    if (windKmh >= 35){
+      lines.push('Und halt den Schirm gut fest, es ist windig.');
+    }
+    return lines.join(' ');
+  }
+
+  // Rein visueller Temperaturverlauf als Sparkline. Wird bewusst NICHT vorgelesen.
+  function buildTempChart(hourly, startIdx, count){
+    var temps = [];
+    for (var k=0; k<count; k++){ temps.push(hourly.temperature_2m[startIdx+k]); }
+    var min = Math.min.apply(null, temps);
+    var max = Math.max.apply(null, temps);
+    if (min === max){ min -= 1; max += 1; }
+
+    var w = 300, h = 88, pad = 8;
+    var stepX = count > 1 ? w/(count-1) : 0;
+    var pts = temps.map(function(t, i){
+      var x = i*stepX;
+      var y = pad + (1 - (t-min)/(max-min)) * (h - 2*pad);
+      return [x, y];
+    });
+    var linePath = 'M' + pts.map(function(p){ return p[0].toFixed(1)+','+p[1].toFixed(1); }).join(' L');
+    var areaPath = linePath + ' L' + w.toFixed(1) + ',' + h + ' L0,' + h + ' Z';
+
+    var gridYs = [pad, pad + (h - 2*pad)/2, h - pad];
+    var gridLines = gridYs.map(function(y){
+      return '<line x1="0" y1="' + y.toFixed(1) + '" x2="' + w + '" y2="' + y.toFixed(1) + '" stroke="' + INK + '" stroke-opacity="0.12" stroke-width="1" stroke-dasharray="2,4"/>';
+    }).join('');
+
+    var svg =
+      '<svg viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none" style="width:100%;height:88px;display:block;overflow:visible;">' +
+        '<defs><linearGradient id="tgradPink" x1="0" y1="0" x2="0" y2="1">' +
+          '<stop offset="0%" stop-color="' + ACCENT + '" stop-opacity="0.28"/>' +
+          '<stop offset="100%" stop-color="' + ACCENT + '" stop-opacity="0"/>' +
+        '</linearGradient></defs>' +
+        gridLines +
+        '<path d="' + areaPath + '" fill="url(#tgradPink)" stroke="none"/>' +
+        '<path d="' + linePath + '" fill="none" stroke="' + INK + '" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>' +
+        '<circle cx="' + pts[0][0].toFixed(1) + '" cy="' + pts[0][1].toFixed(1) + '" r="4" fill="' + ACCENT + '" stroke="#fff" stroke-width="1.5"/>' +
+      '</svg>';
+
+    var yAxisWidth = 28, yAxisGap = 8;
+    var yAxisHtml =
+      '<div style="display:flex;flex-direction:column;justify-content:space-between;align-items:flex-end;width:' + yAxisWidth + 'px;height:' + h + 'px;margin-right:' + yAxisGap + 'px;flex:0 0 auto;">' +
+        '<span style="font-size:10px;font-weight:600;color:var(--muted);line-height:1;">' + Math.round(max) + '\u00b0</span>' +
+        '<span style="font-size:10px;font-weight:600;color:var(--muted);line-height:1;">' + Math.round((max+min)/2) + '\u00b0</span>' +
+        '<span style="font-size:10px;font-weight:600;color:var(--muted);line-height:1;">' + Math.round(min) + '\u00b0</span>' +
+      '</div>';
+
+    var chartRow = '<div style="display:flex;align-items:stretch;">' + yAxisHtml + '<div style="flex:1;min-width:0;">' + svg + '</div></div>';
+
+    var labelStep = Math.max(1, Math.round((count-1)/4));
+    var labelIdxs = [];
+    for (var li=0; li<count; li+=labelStep){ labelIdxs.push(li); }
+    if (labelIdxs[labelIdxs.length-1] !== count-1) labelIdxs.push(count-1);
+
+    var labelsHtml = '<div style="display:flex;justify-content:space-between;margin-top:8px;margin-left:' + (yAxisWidth+yAxisGap) + 'px;">' +
+      labelIdxs.map(function(li){
+        var lbl = li === 0 ? 'Jetzt' : hourLabel(hourly.time[startIdx+li]);
+        return '<span style="font-size:11px;font-weight:500;color:var(--muted);">' + lbl + '</span>';
+      }).join('') +
+    '</div>';
+
+    return chartRow + labelsHtml;
+  }
+
+  var currentUtterance = null;
+
+  function speakOrStop(text, btn){
+    if (!('speechSynthesis' in window)) return;
+    if (window.speechSynthesis.speaking){
+      window.speechSynthesis.cancel();
+      btn.setAttribute('aria-pressed', 'false');
+      btn.innerHTML = SPEAKER_ICON + '<span>Vorlesen</span>';
+      return;
+    }
+    var utter = new SpeechSynthesisUtterance(text);
+    utter.lang = 'de-DE';
+    utter.rate = 0.98;
+    utter.onend = function(){
+      btn.setAttribute('aria-pressed', 'false');
+      btn.innerHTML = SPEAKER_ICON + '<span>Vorlesen</span>';
+    };
+    currentUtterance = utter;
+    btn.setAttribute('aria-pressed', 'true');
+    btn.innerHTML = STOP_ICON + '<span>Stopp</span>';
+    window.speechSynthesis.speak(utter);
+  }
+
+  function render(data){
+    var cur = data.current;
+    var info = weatherInfo(cur.weather_code);
+    var hourly = data.hourly;
+    var daily = data.daily;
+
+    document.body.style.setProperty('--wash', WASH[info.mood] || '#FFE6F1');
+
+    var currentHour = isoHour(cur.time);
+    var greeting = pickGreeting(currentHour);
+
+    var precipChance = 0;
+    var precipMm = 0;
+    var currentIndex = -1;
+    if (hourly && hourly.time){
+      var currentHourKey = cur.time.slice(0,13);
+      for (var i=0;i<hourly.time.length;i++){
+        if (hourly.time[i].slice(0,13) === currentHourKey){
+          currentIndex = i;
+          precipChance = hourly.precipitation_probability[i];
+          precipMm = hourly.precipitation[i];
+          break;
+        }
+      }
+    }
+
+    var temp = Math.round(cur.temperature_2m);
+    var feels = Math.round(cur.apparent_temperature);
+    var wind = Math.round(cur.wind_speed_10m);
+    var advice = buildAdvice(info.mood, wind, feels);
+    var timeStr = isoHM(cur.time);
+
+    var tMax = Math.round(daily.temperature_2m_max[0]);
+    var tMin = Math.round(daily.temperature_2m_min[0]);
+    var sunrise = isoHM(daily.sunrise[0]);
+    var sunset = isoHM(daily.sunset[0]);
+    var uvVal = currentIndex >= 0 ? Math.round(hourly.uv_index[currentIndex]) : Math.round(daily.uv_index_max[0]);
+
+    // Tagesverlauf: jetzt, +3h, +6h, +9h, +12h, +15h
+    var offsets = [0, 3, 6, 9, 12, 15];
+    var timelineHtml = '';
+    var timelineSpoken = [];
+    if (currentIndex >= 0){
+      offsets.forEach(function(off){
+        var idx = currentIndex + off;
+        if (idx >= hourly.time.length) return;
+        var hInfo = weatherInfo(hourly.weather_code[idx]);
+        var hTemp = Math.round(hourly.temperature_2m[idx]);
+        var label = off === 0 ? 'Jetzt' : hourLabel(hourly.time[idx]);
+        timelineHtml +=
+          '<div class="tpoint">' +
+            '<div class="ticon">' + ICONS[hInfo.icon] + '</div>' +
+            '<div class="tval">' + hTemp + '\u00b0</div>' +
+            '<div class="tlbl">' + label + '</div>' +
+          '</div>';
+        if (off > 0){
+          timelineSpoken.push('um ' + hourLabel(hourly.time[idx]) + ' ' + hTemp + ' Grad, ' + hInfo.label.toLowerCase());
+        }
+      });
+    }
+
+    var chartHtml = '';
+    if (currentIndex >= 0){
+      var chartCount = Math.min(24, hourly.time.length - currentIndex);
+      if (chartCount >= 3){
+        chartHtml =
+          '<div class="chart-wrap">' +
+            '<p class="chart-title">Temperaturkurve \u2728</p>' +
+            buildTempChart(hourly, currentIndex, chartCount) +
+          '</div>';
+      }
+    }
+
+    document.getElementById('app').innerHTML =
+      '<p class="place">' + greeting + ' in <strong>' + PLACE + '</strong> \u{1F338}</p>' +
+      '<div class="icon">' + ICONS[info.icon] + '</div>' +
+      '<p class="temp">' + temp + '<sup>\u00b0</sup></p>' +
+      '<p class="condition">' + info.label + '</p>' +
+      '<div class="stats">' +
+        '<div class="stat"><div class="val">' + feels + '\u00b0</div><div class="lbl">gefühlt</div></div>' +
+        '<div class="stat"><div class="val">' + wind + ' km/h</div><div class="lbl">Wind</div></div>' +
+        '<div class="stat"><div class="val">' + precipChance + '%</div><div class="lbl">Regen %</div></div>' +
+      '</div>' +
+      '<div class="stats last">' +
+        '<div class="stat"><div class="val">' + deNum(precipMm) + ' mm</div><div class="lbl">Niederschlag</div></div>' +
+        '<div class="stat"><div class="val">' + tMax + '\u00b0/' + tMin + '\u00b0</div><div class="lbl">Höchst/Tiefst</div></div>' +
+        '<div class="stat"><div class="val">' + uvVal + ' · ' + uvLabel(uvVal) + '</div><div class="lbl">UV-Index</div></div>' +
+      '</div>' +
+      '<p class="sunline">\u{1F305} ' + sunrise + ' Uhr · \u{1F307} ' + sunset + ' Uhr</p>' +
+      (timelineHtml ?
+        '<p class="timeline-title">Im Tagesverlauf</p>' +
+        '<div class="timeline">' + timelineHtml + '</div>'
+        : '') +
+      chartHtml +
+      '<p class="advice">' + advice + '</p>' +
+      '<button class="speak" id="speakBtn" aria-pressed="false">' + SPEAKER_ICON + '<span>Vorlesen</span></button>' +
+      '<p class="updated">Aktualisiert um ' + timeStr + '</p>';
+
+    var spokenText = greeting + '. In ' + PLACE + ' sind es gerade ' + temp + ' Grad bei ' + info.label.toLowerCase() +
+      ', gefühlt ' + feels + ' Grad. Der Wind weht mit ' + wind + ' Kilometer pro Stunde, die Regenwahrscheinlichkeit liegt bei ' + precipChance + ' Prozent' +
+      (precipMm > 0 ? ', aktuell fallen ' + deNum(precipMm) + ' Millimeter Niederschlag' : '') + '. ' +
+      'Heute werden Höchstwerte von ' + tMax + ' Grad und Tiefstwerte von ' + tMin + ' Grad erwartet. ' +
+      'Der UV-Index liegt bei ' + uvVal + ', das ist ' + uvLabel(uvVal) + '. ' +
+      'Die Sonne geht um ' + sunrise + ' Uhr auf und um ' + sunset + ' Uhr unter. ' +
+      (timelineSpoken.length ? 'Im Tagesverlauf: ' + timelineSpoken.join(', ') + '. ' : '') +
+      advice;
+
+    var speakBtn = document.getElementById('speakBtn');
+    speakBtn.addEventListener('click', function(){ speakOrStop(spokenText, speakBtn); });
+  }
+
+  var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + LAT + '&longitude=' + LON +
+    '&current=temperature_2m,apparent_temperature,wind_speed_10m,weather_code' +
+    '&hourly=temperature_2m,precipitation_probability,precipitation,weather_code,uv_index' +
+    '&daily=temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max' +
+    '&forecast_days=2&timezone=Europe%2FBerlin';
+
+  fetch(url)
+    .then(function(r){ if(!r.ok) throw new Error('bad response'); return r.json(); })
+    .then(render)
+    .catch(function(){
+      var h = new Date().getHours();
+      var g = pickGreeting(h);
+      document.getElementById('app').innerHTML =
+        '<p class="place">' + g + ' in <strong>' + PLACE + '</strong></p>' +
+        '<p class="error">Die Vorhersage ist gerade nicht erreichbar.<br>Prüfe deine Verbindung und tippe das Tag noch einmal an.</p>';
+    });
+})();
+</script>
+</body>
+</html>
